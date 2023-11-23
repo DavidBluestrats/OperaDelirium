@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
+/*
+ In this Patrol state, the enemy will travel around a perimeter as long as it is able to.
+ The enemy will turn counter clock wise around a perimeter
+ */
 public class ES_Patrol : StateBase<EnemyStates>
 {
     private Enemy enemyRef;
@@ -15,6 +19,7 @@ public class ES_Patrol : StateBase<EnemyStates>
     {
         Debug.Log("Entered Patrol State");
         enemyRef = GetMainClassReference<Enemy>();
+        enemyRef.navmesh.stoppingDistance = 0f;
     }
 
     public override void ExitState()
@@ -25,90 +30,79 @@ public class ES_Patrol : StateBase<EnemyStates>
 
     public override void UpdateState()
     {
-        if (!enemyRef.navmesh.hasPath)
+
+        if (!enemyRef.navmesh.hasPath || enemyRef.navmesh.remainingDistance <= enemyRef.navmesh.stoppingDistance)
         {
-            RaycastHit hit;
             Vector3 accuratePosition = enemyRef.transform.position;
             accuratePosition.y += enemyRef.navmesh.height;
 
-            bool forwardIsObstructed = Physics.Raycast(accuratePosition, enemyRef.transform.TransformDirection(Vector3.forward), out hit, 3f, enemyRef.pathfinderObstacleMask);
-
-            if (forwardIsObstructed)
+            if (HeadInDirection(Vector3.forward, accuratePosition))
             {
-                Debug.Log("ForwardObstructed");
-            }
-            else
+
+            }else if(HeadInDirection(Vector3.left, accuratePosition))
             {
-                bool destinationIsReachable = Physics.Raycast(accuratePosition, enemyRef.transform.TransformDirection(Vector3.forward), out hit, 50f, enemyRef.pathfinderObstacleMask);
-                Debug.DrawRay(accuratePosition, enemyRef.transform.TransformDirection(Vector3.forward) * hit.distance, Color.red, 3f);
-                Debug.Log("Forward Destination available: " + hit.point);
 
-                NavMeshHit hitMesh;
-                if (destinationIsReachable)
-                {
-                    NavMesh.SamplePosition(hit.point, out hitMesh, 30f, NavMesh.AllAreas);
-                    Debug.Log("Destination found: " + hitMesh.position);
-                    enemyRef.navmesh.SetDestination(hitMesh.position);
-                    Debug.DrawRay(hitMesh.position, Vector3.up, Color.blue, 1.0f);
-                    return;
-                }
-            }
-
-            bool leftIsObstructed = Physics.Raycast(accuratePosition, enemyRef.transform.TransformDirection(Vector3.left), out hit, 3f, enemyRef.pathfinderObstacleMask);
-            
-            if (leftIsObstructed)
+            }else if (HeadInDirection(Vector3.right, accuratePosition))
             {
-                Debug.Log("LeftObstructed");
-            }
-            else
+
+            }else if(HeadInDirection(Vector3.back, accuratePosition))
             {
-                //Debug.Log("Left Available");
-                bool destinationIsReachable = Physics.Raycast(accuratePosition, enemyRef.transform.TransformDirection(Vector3.left), out hit, 50f, enemyRef.pathfinderObstacleMask);
-                Debug.DrawRay(accuratePosition, enemyRef.transform.TransformDirection(Vector3.left) * hit.distance, Color.red, 3f);
-                Debug.Log("Left Destination available: "+hit.point);
 
-                NavMeshHit hitMesh;
-                if (destinationIsReachable)
-                {
-                    NavMesh.SamplePosition(hit.point, out hitMesh, 30f, NavMesh.AllAreas);
-                    Debug.Log("Destination found: "+hitMesh.position);
-                    enemyRef.navmesh.SetDestination(hitMesh.position);
-                    Debug.DrawRay(hitMesh.position, Vector3.up, Color.blue, 1.0f);
-                    return;
-                }
-                //if (destinationIsReachable) enemyRef.navmesh.destination = hit.point;
             }
-
-            bool rightIsObstructed = Physics.Raycast(accuratePosition, enemyRef.transform.TransformDirection(Vector3.right), out hit, 3f, enemyRef.pathfinderObstacleMask);
-
-            if (rightIsObstructed)
-            {
-                Debug.DrawRay(accuratePosition, enemyRef.transform.TransformDirection(Vector3.right) * hit.distance, Color.red);
-                Debug.Log("RightObstructed");
-            }
-            else
-            {
-                //Debug.Log("Right Available");
-                bool destinationIsReachable = Physics.Raycast(accuratePosition, enemyRef.transform.TransformDirection(Vector3.right), out hit, 50f, enemyRef.pathfinderObstacleMask);
-                Debug.Log("Right Destination available: " + destinationIsReachable);
-
-                NavMeshHit hitMesh;
-                if (destinationIsReachable)
-                {
-                    NavMesh.SamplePosition(hit.point, out hitMesh, 30f, NavMesh.AllAreas);
-                    enemyRef.navmesh.SetDestination(hitMesh.position);
-                    Debug.DrawRay(hitMesh.position, Vector3.up, Color.blue, 1.0f);
-                    return;
-                }
-                //if (destinationIsReachable) enemyRef.navmesh.destination = hit.point;
-            }
-
-            //bool backIsObstructed = Physics.Raycast(enemyRef.transform.position, enemyRef.transform.TransformDirection(-Vector3.forward), out hit, 3f, 7);
-
         }
-        /*
-         if(checkIfPlayerIsOnSight)
-         */
+        else
+        {
+        }
+
+        if (enemyRef.fieldOfView.CanSeePlayer() != ENEMY_FOV_STATES.NOT_IN_VIEW) enemyRef.TransitionToState(EnemyStates.AttackStatic);
+        //Debug.Log("Remaining distance: " + enemyRef.navmesh.remainingDistance);
+        //If disarmed and pickable weapon is on sight, pickup weapon.
+        //If player is on sight, transition to attack.
+    }
+
+    private bool HeadInDirection(Vector3 _direction, Vector3 _startPosition)
+    {
+        RaycastHit hit;
+        bool directionIsObstructed = Physics.Raycast(_startPosition, enemyRef.transform.TransformDirection(_direction), out hit, 3f, enemyRef.pathfinderObstacleMask);
+
+        if (directionIsObstructed)
+        {
+            Debug.DrawRay(_startPosition, enemyRef.transform.TransformDirection(_direction) * hit.distance, Color.red);
+            Debug.Log("Direction Obstructed");
+            return false;
+        }
+        else
+        {
+            //Debug.Log("Right Available");
+            bool destinationIsReachable = Physics.Raycast(_startPosition, enemyRef.transform.TransformDirection(_direction), out hit, 50f, enemyRef.pathfinderObstacleMask);
+            Debug.Log(_direction+" destination available: " + destinationIsReachable);
+
+            NavMeshHit hitMesh;
+            if (destinationIsReachable)
+            {
+                NavMesh.SamplePosition(hit.point, out hitMesh, 30f, NavMesh.AllAreas);
+                enemyRef.navmesh.SetDestination(hitMesh.position);
+                Debug.DrawRay(hitMesh.position, Vector3.up, Color.blue, 1.0f);
+                return true;
+            }
+            return false;
+            //if (destinationIsReachable) enemyRef.navmesh.destination = hit.point;
+        }
+    }
+
+    private bool HasReachedDestination()
+    {
+        if (!enemyRef.navmesh.pathPending)
+        {
+            if (enemyRef.navmesh.remainingDistance <= enemyRef.navmesh.stoppingDistance)
+            {
+                if (!enemyRef.navmesh.hasPath || enemyRef.navmesh.velocity.sqrMagnitude == 0f)
+                {
+                    //Done
+                }
+            }
+        }
+        return true;
     }
 
     bool RandomPoint(Vector3 center, float range, out Vector3 result)
