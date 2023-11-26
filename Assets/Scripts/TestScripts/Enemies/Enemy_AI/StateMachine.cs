@@ -20,6 +20,16 @@ public abstract class StateMachine<EState> : MonoBehaviour where EState : Enum
         States.Add(stateKey, state);
     }
 
+    public T GetState<T>(EState _stateKey) where T : class
+    {
+
+        if (States.ContainsKey(_stateKey))
+        {
+            return States[_stateKey] as T;
+        }
+        return null;
+    }
+
     // Update is called once per frame
     void Update()
     {

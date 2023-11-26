@@ -5,36 +5,44 @@ using UnityEngine;
 public class Mover : MonoBehaviour
 {
     float moveSpeed = 10f;
+    private Vector3 direction;
+    private Vector3 currentPosition;
+    private Vector3 previousPosition;
+    [SerializeField] private CameraTopFollower worldCam;
+
     // Start is called before the first frame update
     void Start()
     {
-        printInstructionsToConsole();
+        currentPosition = transform.position;
     }
     // Update is called once per frame
     void Update()
     {
-        playerMovement();
-        playerJump();
+        PlayerMovement();
+        PlayerRotation();
     }
 
-    void printInstructionsToConsole()
+    void PlayerMovement()
     {
-        Debug.Log("Welcome to the game.");
-        Debug.Log("Use WASD to move around.");
-        Debug.Log("Have fun gamer.");
-    }
-
-    void playerMovement()
-    {
+        previousPosition = currentPosition;
         float xValue = Input.GetAxis("Horizontal") * Time.deltaTime * moveSpeed;
         float zValue = Input.GetAxis("Vertical") * Time.deltaTime * moveSpeed;
-        transform.Translate(xValue, 0, zValue);
+        currentPosition = new Vector3(xValue, currentPosition.y, zValue);
+
+        direction = (currentPosition - previousPosition).normalized;
+
+        transform.Translate(xValue, 0, zValue, Space.World);
     }
-    void playerJump()
+
+    void PlayerRotation()
     {
-        if (Input.GetKey(KeyCode.Space))
-        {
-            GetComponent<Rigidbody>().AddRelativeForce(Vector3.up * 600f * Time.deltaTime);
-        }
+        Vector3 mousePositionInWorld = worldCam.GetMousePositionInWorld();
+        mousePositionInWorld.y = transform.position.y;
+        transform.LookAt(mousePositionInWorld,transform.up);
+    }
+
+    public Vector3 GetPlayerDirection()
+    {
+        return direction;
     }
 }

@@ -6,9 +6,8 @@ public class ES_AttackStatic : StateBase<EnemyStates>
 {
 
     private Enemy enemyRef;
-    private EnemyFieldOfView fov;
-    private float rotationSpeed = 3.5f;
-    private float shootReactionTimeInSecs = 0.7f;
+    private float rotationSpeed = 6f;
+    private float shootReactionTimeInSecs = 0.25f;
 
 
     public ES_AttackStatic(EnemyStates _key) : base(_key)
@@ -20,7 +19,8 @@ public class ES_AttackStatic : StateBase<EnemyStates>
     {
         Debug.Log("Entered AttackStatic.");
         enemyRef = GetMainClassReference<Enemy>();
-        fov = enemyRef.GetComponent<EnemyFieldOfView>();
+
+        enemyRef.navmesh.ResetPath();
     }
 
     public override void ExitState()
@@ -30,9 +30,19 @@ public class ES_AttackStatic : StateBase<EnemyStates>
 
     public override void UpdateState()
     {
-        ENEMY_FOV_STATES detectionState = fov.CanSeePlayer();
+        ENEMY_FOV_STATES detectionState = enemyRef.fieldOfView.CanSeePlayer();
         if (detectionState == ENEMY_FOV_STATES.IN_VIEW || detectionState == ENEMY_FOV_STATES.IN_SHOOT_VIEW)
         {
+
+            float distanceToPlayer = Vector3.Distance(enemyRef.transform.position, enemyRef.playerTransform.position);
+
+            if (distanceToPlayer >= 13f)
+            {
+                // Follow the player
+                enemyRef.navmesh.SetDestination(enemyRef.playerTransform.position);
+            }
+            else enemyRef.navmesh.ResetPath();
+
             enemyRef.navmesh.updateRotation = false;
             Vector3 direction = enemyRef.playerTransform.position - enemyRef.transform.position;
             Quaternion lookRotation = Quaternion.LookRotation(direction);
@@ -44,7 +54,7 @@ public class ES_AttackStatic : StateBase<EnemyStates>
                 if(shootReactionTimeInSecs <= 0f)
                 {
                     //Shoot at player
-                    Debug.Log("SHOOTING AT PLAYER!!");
+                    enemyRef.FireGunInHand();
                 }
                 else
                 {
@@ -57,6 +67,11 @@ public class ES_AttackStatic : StateBase<EnemyStates>
             shootReactionTimeInSecs = 0.5f;
             enemyRef.navmesh.updateRotation = true;
             //Transition to Seek State
+            ES_SeekPlayer seekPlayerState = enemyRef.GetState<ES_SeekPlayer>(EnemyStates.SeekPlayer);
+            seekPlayerState.playerLastKnownLocation = enemyRef.playerTransform.position;
+            enemyRef.navmesh.ResetPath();
+
+            enemyRef.TransitionToState(EnemyStates.SeekPlayer);
         }
     }
 }

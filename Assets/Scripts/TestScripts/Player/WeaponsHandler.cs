@@ -19,9 +19,9 @@ public class WeaponsHandler : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Mouse0))
+        if (Input.GetKey(KeyCode.Mouse0))
         {
-            FireGunInHand();
+            if(gunInHand.canFire) FireGunInHand();
         }
         if (Input.GetKeyDown(KeyCode.F))
         {
@@ -31,13 +31,20 @@ public class WeaponsHandler : MonoBehaviour
 
     private void FireGunInHand()
     {
-        
+        gunInHand.canFire = false;
         Vector3 mousePositionInWorld = CameraTopFollower.Ins.GetMousePositionInWorld();
         mousePositionInWorld.y = 0;
         Vector3 differenceOfPositions = mousePositionInWorld - transform.position;
         Vector3 directionFromPlayerToMouse = differenceOfPositions.normalized;
 
         gunInHand.Shoot(transform.position, player.forward);
+        Invoke("ResetGunFireRate", gunInHand.timeBetweenShots);
+        
+    }
+
+    void ResetGunFireRate()
+    {
+        gunInHand.canFire = true;
     }
 
     private void ThrowGunInHand()
@@ -46,5 +53,10 @@ public class WeaponsHandler : MonoBehaviour
             //Play generic throw animation.
             //Send weapon in hand flown towards direction player is looking.
         //If standing on another weapon, pick it up.
+    }
+
+    private void MeleeAttack()
+    {
+
     }
 }

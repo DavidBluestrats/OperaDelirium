@@ -19,11 +19,15 @@ public class FieldOfViewEditor : Editor
         Vector3 viewAngleC = fow.DirFromAngle(-fow.viewAngleHorizontalShootAngle / 2, false);
         Vector3 viewAngleD = fow.DirFromAngle(fow.viewAngleHorizontalShootAngle / 2, false);
 
+        /*
+
         Vector3 viewAngleE = fow.DirFromAngleVertical(-fow.viewAngleVertical / 2, false);
         Vector3 viewAngleF = fow.DirFromAngleVertical(fow.viewAngleVertical / 2, false);
 
         Vector3 viewAngleG = fow.DirFromAngleVertical(-fow.viewAnglePeripheralVertical / 2, false);
         Vector3 viewAngleH = fow.DirFromAngleVertical(fow.viewAnglePeripheralVertical / 2, false);
+
+        */
 
         Handles.DrawLine(fow.transform.position, fow.transform.position + viewAngleA * fow.viewRadius);
         Handles.DrawLine(fow.transform.position, fow.transform.position + viewAngleB * fow.viewRadius);

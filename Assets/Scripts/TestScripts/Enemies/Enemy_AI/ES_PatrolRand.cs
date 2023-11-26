@@ -23,6 +23,7 @@ public class ES_PatrolRand : StateBase<EnemyStates>
         Debug.Log("Patrolling Randomly.");
         enemyRef = GetMainClassReference<Enemy>();
         enemyRef.navmesh.stoppingDistance = 0.5f;
+        enemyRef.navmesh.speed = 5f;
     }
 
     public override void ExitState()
@@ -39,8 +40,23 @@ public class ES_PatrolRand : StateBase<EnemyStates>
             Vector3 accuratePosition = enemyRef.transform.position;
             accuratePosition.y += enemyRef.navmesh.height;
 
-            if (enemyRef.navmesh.remainingDistance <= enemyRef.navmesh.stoppingDistance && secondsTilNextPath <= Time.time)
+            if (enemyRef.navmesh.remainingDistance <= enemyRef.navmesh.stoppingDistance /*&& secondsTilNextPath <= Time.time*/)
             {
+
+                if(secondsTilNextPath <= 0f)
+                {
+                    Debug.Log("Moving Somewhere else.");
+                    secondsTilNextPath = Random.Range(2f, 5f);
+
+                    RandomPoint(accuratePosition, 9f, out Vector3 result);
+                    enemyRef.navmesh.SetDestination(result);
+                    Debug.Log("1. Seconds till next path: " + secondsTilNextPath);
+                }
+                else
+                {
+                    secondsTilNextPath -= Time.deltaTime;
+                }
+                /*
                 Debug.Log("Moving Somewhere else.");
                 float randSecs = Random.Range(2f, 5f);
                 float timeToReachNewDestination;
@@ -55,6 +71,7 @@ public class ES_PatrolRand : StateBase<EnemyStates>
 
                 secondsTilNextPath = Time.time + randSecs + timeToReachNewDestination;
                 Debug.Log("1. Seconds till next path: " + randSecs+ " Distance to destination: "+ timeToReachNewDestination);
+                */
             }
         }
 

@@ -20,6 +20,7 @@ public class ES_Patrol : StateBase<EnemyStates>
         Debug.Log("Entered Patrol State");
         enemyRef = GetMainClassReference<Enemy>();
         enemyRef.navmesh.stoppingDistance = 0f;
+        enemyRef.navmesh.speed = 5f;
     }
 
     public override void ExitState()
