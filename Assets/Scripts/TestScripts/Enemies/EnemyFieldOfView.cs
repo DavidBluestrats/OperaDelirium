@@ -53,6 +53,13 @@ public class EnemyFieldOfView : MonoBehaviour
         return state;
     }
 
+    public bool CanSeeWeapon(Gun _weaponToTest)
+    {
+        Vector3 distToTarget = (_weaponToTest.transform.position - transform.position).normalized;
+        float distance = Vector3.Distance(_weaponToTest.transform.position, transform.position);
+        return !Physics.Raycast(transform.position, distToTarget, distance, obstMask);
+    }
+
     public Vector3 DirFromAngle(float angleInDegrees, bool angleIsGlobal)
     {
         if (!angleIsGlobal)

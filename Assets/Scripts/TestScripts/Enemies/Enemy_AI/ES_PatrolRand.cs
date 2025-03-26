@@ -103,7 +103,7 @@ public class ES_PatrolRand : StateBase<EnemyStates>
         
     }
 
-    bool RandomPoint(Vector3 _center, float _range, out Vector3 _result)
+    public bool RandomPoint(Vector3 _center, float _range, out Vector3 _result)
     {
         for (int i = 0; i < 30; i++)
         {

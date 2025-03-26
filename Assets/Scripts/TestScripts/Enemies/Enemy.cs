@@ -11,7 +11,9 @@ public class Enemy : StateMachine<EnemyStates>
     public DamageableEntity damageManager;
     public EnemyFieldOfView fieldOfView;
     public LayerMask pathfinderObstacleMask;
+    public LayerMask pickupWeaponsLayerMask;
     public Transform playerTransform;
+    public Transform mainHandRef;
     public Mover playerMover;
     public EnemyStates startState;
 
@@ -23,6 +25,9 @@ public class Enemy : StateMachine<EnemyStates>
         damageManager = GetComponent<DamageableEntity>();
         fieldOfView = GetComponent<EnemyFieldOfView>();
         playerMover = playerTransform.GetComponent<Mover>();
+
+        NavMesh.pathfindingIterationsPerFrame = 5000;
+        NavMesh.avoidancePredictionTime = 0.5f;
 
         AddState(EnemyStates.Patrol, new ES_Patrol(EnemyStates.Patrol), this);
         AddState(EnemyStates.PatrolRandom, new ES_PatrolRand(EnemyStates.PatrolRandom), this);
@@ -60,6 +65,26 @@ public class Enemy : StateMachine<EnemyStates>
     private void OnCollisionEnter(Collision collision)
     {
 
+    }
+
+    public Gun FindGunToPickUp()
+    {
+        Gun elligibleGun = null;
+        Collider[] weaponsAround = Physics.OverlapSphere(transform.position, 5f, pickupWeaponsLayerMask);
+        if (weaponsAround.Length > 0)
+        {
+            foreach (var weapon in weaponsAround)
+            {
+                Gun gun = weapon.GetComponent<Gun>();
+                if (!gun.isPickedUp && !gun.isSoughtAfter && gun.currentAmmo > 0 && fieldOfView.CanSeeWeapon(gun))
+                {
+                    elligibleGun = gun;
+                    break;
+                }
+            }            
+        }
+
+        return elligibleGun;
     }
 
 }

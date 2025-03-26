@@ -26,6 +26,7 @@ public class ES_AttackStatic : StateBase<EnemyStates>
     public override void ExitState()
     {
         Debug.Log("Exit AttackStatic.");
+        enemyRef.navmesh.updateRotation = true;
     }
 
     public override void UpdateState()
